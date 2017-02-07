@@ -1,6 +1,4 @@
-body {
-	background: green;
-}
-p {
-	color: blue;
+.container {
+	max-width: 800px;
+	margin: 0 auto;
 }

@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Foodr - Home {% endblock %}
+{% block title %}Foodr - {{ name }}{% endblock %}
 
 {% block content %}
 <div class="user_information">
+	<p>{{ name }}</p>
+	<p>{{ posts }} </p>
+	<p>{{ diners }}</p>
 </div>
 {% endblock %}
