@@ -65,7 +65,7 @@ def about():
 @app.route('/picture/<picture_id>')
 def picture(picture_id):
 	if picture_exists(picture_id):
-		return "It works"
+		return render_template(picture.html)
 	else:
 		abort(404)
 
