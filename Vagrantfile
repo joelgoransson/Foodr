@@ -12,7 +12,6 @@ Vagrant.configure(2) do |config|
     sudo apt-get update
     sudo apt-get install -y python3-pip
     sudo pip3 install honcho
-    sudo pip3 install flask
     sudo pip3 install -r /vagrant/requirements.txt
   SHELL
 end

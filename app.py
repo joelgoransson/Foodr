@@ -56,9 +56,9 @@ def picture_exists(picture_id):
 
 @app.route("/")
 def home():
-	return render_template('home.html')
+	return render_template('login.html')
 
-@app.route('/about/')
+@app.route('/about')
 def about():
 	return render_template('about.html')
 
@@ -76,6 +76,13 @@ def user(user_id):
 		return render_template('user.html', **user_information)
 	else:
 		abort(404)
+
+@app.route('/message', methods=['GET', 'POST'])
+def message():
+	if request.method == 'POST':
+		return 'You posted it!'
+	else:
+		return render_template('name.html')
 
 if __name__ == "__main__":
 	app.run("0.0.0.0", debug=True)
