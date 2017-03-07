@@ -78,22 +78,5 @@ def user(user_id):
 	else:
 		abort(404)
 
-@app.route('/homework')
-def homework():
-	return render_template('homework.html')
-
-@app.route('/message', methods=['POST'])
-def message():
-	return 'You posted it!'
-
-@app.route('/addition', methods=['POST'])
-def addition():
-	try:
-		number1 = int(request.form['number1'])
-		number2 = int(request.form['number2'])
-		return str(number1 + number2)
-	except ValueError:
-		return 'Something went wrong!'
-
 if __name__ == "__main__":
 	app.run("0.0.0.0", debug=True)
