@@ -1,12 +1,19 @@
 from flask import Flask, request, redirect, url_for, render_template, abort
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, validators
 import os
 import uuid
 app = Flask("Foodr")
+app.config["WTF_CSRF_ENABLED"] = False
 
 base = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(base, 'static', 'uploads')
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+class LoginForm(FlaskForm):
+	email = StringField('Email:', [validators.required()])
+	password = PasswordField('Password:', [validators.required()])
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -34,7 +41,7 @@ def upload_file():
 
 
 def user_is_logged_in():
-	return True
+	return False
 
 def user_exists(user_id):
 	try:
@@ -53,10 +60,16 @@ def picture_exists(picture_id):
 	except ValueError:
 		return False
 
-
 @app.route("/")
 def home():
-	return render_template('login.html')
+	if user_is_logged_in():
+		pass #return feed
+	else:
+		form = LoginForm()
+		if form.validate_on_submit(): #add login validation
+			pass #login in
+		else:
+			return render_template('login.html', form=form)
 
 @app.route('/about')
 def about():
@@ -78,5 +91,12 @@ def user(user_id):
 	else:
 		abort(404)
 
+@app.route('/contact', methods=['get', 'post'])
+def contact():
+	if request.method == 'POST':	
+		return 'yay'
+	else:
+		return render_template('contact.html')
 if __name__ == "__main__":
-	app.run("0.0.0.0", debug=True)
+	#app.run("0.0.0.0", debug=True)
+	app.run(debug=True)

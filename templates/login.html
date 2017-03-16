@@ -9,11 +9,13 @@
 	<div class="login_container">	
 		<div class="login_box">
 			<form action="/login" method="post">
-				<label for="id_email">Email:</label>
-				<input type ="text" name="email" id="id_email">
-				<label for="id_password">Password:</label>
-				<input type="password" name="password" id="id_password">
-				<button class="login_button" type="submit">Submit</button>
+				{{ form.email.label }}
+				{{ form.email }}
+				{{ form.password.label }}
+				{{ form.password }}
+				<div class="button">
+					<button class="login_button" type="submit">Submit</button>
+				</div>
 			</form>
 			<a href="/signup/">Don't have a account?</a>
 			<a href="/forgot/">Forgot your password?</a>
