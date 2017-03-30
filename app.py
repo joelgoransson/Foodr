@@ -1,10 +1,20 @@
 from flask import Flask, request, redirect, url_for, render_template, abort
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, validators
+from models import db, Contact
 import os
 import uuid
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
+
+@app.before_request
+def before_request():
+    db.connect()
+
+@app.after_request
+def after_request(response):
+    db.close()
+    return response
 
 base = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(base, 'static', 'uploads')
@@ -82,7 +92,6 @@ def picture(picture_id):
 	else:
 		abort(404)
 
-
 @app.route('/user/<user_id>')
 def user(user_id):
 	if user_exists(user_id):
@@ -91,12 +100,20 @@ def user(user_id):
 	else:
 		abort(404)
 
+class ContactForm(FlaskForm):
+	name = StringField('name', [validators.InputRequired()])
+	email = StringField('email', [validators.InputRequired()])
+	message = StringField('message', [validators.InputRequired()])
+
 @app.route('/contact', methods=['get', 'post'])
 def contact():
 	if request.method == 'POST':	
-		return 'yay'
+		hej = Contact.create(name=request.form['name'], email=request.form['email'], message=request.form['message'])
+		return 'thanks for contacting us!'
 	else:
-		return render_template('contact.html')
+		form = ContactForm()
+		return render_template('contact.html', form=form)
+
 if __name__ == "__main__":
 	#app.run("0.0.0.0", debug=True)
 	app.run(debug=True)

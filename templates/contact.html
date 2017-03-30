@@ -3,18 +3,23 @@
 {% block title %}Foodr - Contact{% endblock %}
 
 {% block content %}
+
 <form action="/contact" method="post">
-	<div class="form">
-		<label for="contact_name">Name:</label>
-		<input type="text" name="name" id="contact_name" required>
-	</div>
-	<div class="form">
-		<label for="contact_email"></label>
-		<input type="email" name="email" id="contact_email">
-	</div>
-	<div class="form">
-		<label for="contact_message"></label>
-		<textarea name="message"></textarea>
+	{% for field in form %}
+		{{ field.label }}
+		{% if form.errors[field.name] %}
+			<ul class="errors">
+				{% for error in form.errors[field.name] %}
+					<li>{{ error }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		{{ field }}
+	{% endfor %}
+	<div class="button">
+		<button type="submit">Submit</button>
 	</div>
 </form>
+
+
 {% endblock %}
