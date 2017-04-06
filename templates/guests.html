@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Foodr - Guest Book{% endblock %}
+
+{% block content %}
+	{% for guest in guests %}
+		<p>{{ guest.name }}</p>
+		<p>{{ guest.email }}</p>
+		<p>{{guest.message }}</p>
+	{% endfor %}
+{% endblock %}

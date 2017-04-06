@@ -1,3 +1,3 @@
-from models import db, Contact
+from models import db, Guest
 db.connect()
-db.create_tables([Contact])
+db.create_tables([Guest])
