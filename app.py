@@ -1,9 +1,8 @@
 from flask import Flask, request, redirect, url_for, render_template, abort
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, validators
-from models import db, Contact
-import os
-import uuid
+from wtforms import StringField, IntegerField, PasswordField, validators
+from models import db, Guest
+
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
 
@@ -16,39 +15,9 @@ def after_request(response):
     db.close()
     return response
 
-base = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(base, 'static', 'uploads')
-ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 class LoginForm(FlaskForm):
 	email = StringField('Email:', [validators.required()])
 	password = PasswordField('Password:', [validators.required()])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/picture/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-
-        if file and allowed_file(file.filename):
-        	filename, file_extension = os.path.splitext(file.filename)
-        	file.save(os.path.join(app.config['UPLOAD_FOLDER'], str(uuid.uuid4()) + file_extension))
-        	return redirect(url_for('upload_file', filename=filename))
-    return render_template("upload.html")
-
 
 def user_is_logged_in():
 	return False
@@ -100,19 +69,32 @@ def user(user_id):
 	else:
 		abort(404)
 
-class ContactForm(FlaskForm):
+
+class AccountForm(FlaskForm):
+	name = StringField('name', [validators.InputRequired()])
+	email = StringField('email', [validators.InputRequired()])
+	age = IntegerField('age', [validators.InputRequired()])
+	
+
+@app.route('/create_account', methods=['GET', 'POST'])
+def create_user():
+	return render_template('create_account.html', form=form)
+
+
+class GuestForm(FlaskForm):
 	name = StringField('name', [validators.InputRequired()])
 	email = StringField('email', [validators.InputRequired()])
 	message = StringField('message', [validators.InputRequired()])
 
-@app.route('/contact', methods=['get', 'post'])
-def contact():
+@app.route('/guest_book', methods=['get', 'post'])
+def guest_book():
 	if request.method == 'POST':	
-		hej = Contact.create(name=request.form['name'], email=request.form['email'], message=request.form['message'])
-		return 'thanks for contacting us!'
+		guest = Guest.create(name=request.form['name'], email=request.form['email'], message=request.form['message'])
+		guests = Guest.select()
+		return render_template('guests.html', guests=guests)
 	else:
-		form = ContactForm()
-		return render_template('contact.html', form=form)
+		form = GuestForm()
+		return render_template('guest_book.html', form=form)
 
 if __name__ == "__main__":
 	#app.run("0.0.0.0", debug=True)
