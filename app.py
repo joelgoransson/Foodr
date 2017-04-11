@@ -97,5 +97,5 @@ def guest_book():
 		return render_template('guest_book.html', form=form)
 
 if __name__ == "__main__":
-	#app.run("0.0.0.0", debug=True)
+	app.run("0.0.0.0", debug=True)
 	app.run(debug=True)

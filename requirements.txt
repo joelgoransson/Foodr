@@ -1,2 +1,5 @@
 Flask
 gunicorn
+psycopg2
+peewee
+Flask-WTF

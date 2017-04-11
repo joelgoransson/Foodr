@@ -1,5 +1,5 @@
 from peewee import *
-db = SqliteDatabase('guest.db')
+db = PostgresqlDatabase('webapp')
 class Guest(Model):
 	name = CharField()
 	email = CharField()
