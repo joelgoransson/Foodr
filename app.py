@@ -1,10 +1,12 @@
-from flask import Flask, request, redirect, url_for, render_template, abort
+from flask import Flask, request, redirect, url_for, render_template, abort, make_response
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField, validators
 from models import db, Guest
+import os
 
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "insecure_key")
 
 @app.before_request
 def before_request():
@@ -49,6 +51,20 @@ def home():
 			pass #login in
 		else:
 			return render_template('login.html', form=form)
+
+@app.route('/have/i/visited/this/page/before')
+def have_i_visited_this_page_before():
+	try:
+		visited = int(request.cookies.get('visited', "0"))
+	except ValueError:
+		visited = 0
+	if visited == 0:
+		response = make_response('no.')
+		response.set_cookie('visited', "1")
+	else:
+		response = make_response('yes.')
+	return response
+
 
 @app.route('/about')
 def about():
