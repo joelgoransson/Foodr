@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, abort, make_response
+from flask import Flask, request, redirect, url_for, render_template, abort, make_response, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField, validators
 from models import db, Guest
@@ -52,7 +52,7 @@ def home():
 		else:
 			return render_template('login.html', form=form)
 
-@app.route('/have/i/visited/this/page/before')
+@app.route('/easter_egg/have/i/visited/this/page/before')
 def have_i_visited_this_page_before():
 	try:
 		visited = int(request.cookies.get('visited', "0"))
@@ -65,6 +65,23 @@ def have_i_visited_this_page_before():
 		response = make_response('yes.')
 	return response
 
+class PasswordForm(FlaskForm):
+	password = PasswordField('password', [validators.required()])
+
+@app.route('/easter_egg/secret_page', methods=['POST', 'GET'])
+def secret_page():
+	logged_in = int(session.get("logged_in", "0"))
+	form = PasswordForm()
+	if request.method == 'POST':
+		if request.form['password'] == 'hallonsylt':
+			return "that's correct!"
+		return render_template('secret_page_form.html', form=form, error="Wrong password!")
+	else:
+		if logged_in == "1":
+			return 'Welcome to my top secret page!'
+		else:
+			return render_template('secret_page_form.html', form=form, error=None)
+		
 
 @app.route('/about')
 def about():
