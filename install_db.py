@@ -1,3 +1,3 @@
-from models import db, Guest
+from models import db, User, Role, UserRoles
 db.connect()
-db.create_tables([Guest])
+db.create_tables([User, Role, UserRoles], safe=True)

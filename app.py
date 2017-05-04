@@ -1,21 +1,19 @@
 from flask import Flask, request, redirect, url_for, render_template, abort, make_response, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField, validators
-from models import db, Guest
+from flask_security import Security, PeeweeUserDatastore, login_required
+from models import db, User, Role, UserRoles
 import os
 
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "insecure_key")
+app.config["SECURITY_USER_IDENTITY_ATTRIBUTES"] = "email"
+app.config["SECURITY_PASSWORD_HASH"] = "pbkdf2_sha512"
+app.config["SECURITY_PASSWORD_SALT"] = app.config["SECRET_KEY"]
 
-@app.before_request
-def before_request():
-    db.connect()
-
-@app.after_request
-def after_request(response):
-    db.close()
-    return response
+user_datastore = PeeweeUserDatastore(db, User, Role, UserRoles)
+security = Security(app, user_datastore)
 
 class LoginForm(FlaskForm):
 	email = StringField('Email:', [validators.required()])
@@ -25,11 +23,11 @@ def user_is_logged_in():
 	return False
 
 def user_exists(user_id):
-	try:
-		user_id = int(user_id)
-		return True
-	except:
-		return False
+	user = User.select().where(user_id == User.user_id)
+	if len(user) == 1:
+		print(user)
+		return user
+	return None
 
 def get_user_information(user_id):
 	return {"name": "Joel", "posts": 0, "diners": 0}
@@ -42,46 +40,12 @@ def picture_exists(picture_id):
 		return False
 
 @app.route("/")
+@login_required
 def home():
-	if user_is_logged_in():
-		pass #return feed
-	else:
-		form = LoginForm()
-		if form.validate_on_submit(): #add login validation
-			pass #login in
-		else:
-			return render_template('login.html', form=form)
-
-@app.route('/easter_egg/have/i/visited/this/page/before')
-def have_i_visited_this_page_before():
-	try:
-		visited = int(request.cookies.get('visited', "0"))
-	except ValueError:
-		visited = 0
-	if visited == 0:
-		response = make_response('no.')
-		response.set_cookie('visited', "1")
-	else:
-		response = make_response('yes.')
-	return response
+	return 'feed'
 
 class PasswordForm(FlaskForm):
 	password = PasswordField('password', [validators.required()])
-
-@app.route('/easter_egg/secret_page', methods=['POST', 'GET'])
-def secret_page():
-	logged_in = int(session.get("logged_in", "0"))
-	form = PasswordForm()
-	if request.method == 'POST':
-		if request.form['password'] == 'hallonsylt':
-			return "that's correct!"
-		return render_template('secret_page_form.html', form=form, error="Wrong password!")
-	else:
-		if logged_in == "1":
-			return 'Welcome to my top secret page!'
-		else:
-			return render_template('secret_page_form.html', form=form, error=None)
-		
 
 @app.route('/about')
 def about():
