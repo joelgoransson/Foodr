@@ -22,10 +22,19 @@ class BaseModel(Model):
 	class Meta:
 		database = db
 
+class Food(BaseModel):
+	name = CharField(unique=True)
+
 class User(BaseModel, UserMixin):
-    email = CharField(unique=True)
-    password = CharField()
-    active = BooleanField(default=True)
+	username = CharField(unique=True)
+	email = CharField(unique=True)
+	password = CharField()
+	active = BooleanField(default=True)
+	favorite_food = ForeignKeyField(Food)
+
+class Post(BaseModel):
+	user = ForeignKeyField(User)
+	text = CharField()
 
 class Role(BaseModel, RoleMixin):
     name = CharField(unique=True)

@@ -60,12 +60,11 @@ def picture(picture_id):
 
 @app.route('/user/<user_id>')
 def user(user_id):
-	if user_exists(user_id):
-		user_information = get_user_information(user_id)
-		return render_template('user.html', **user_information)
-	else:
+	try:
+		user = User.select().where(User.id == user_id)[0]
+		return render_template('user.html', user=user)
+	except (ValueError, IndexError):
 		abort(404)
-
 
 class AccountForm(FlaskForm):
 	name = StringField('name', [validators.InputRequired()])
