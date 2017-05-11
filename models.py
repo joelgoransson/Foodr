@@ -1,5 +1,5 @@
 import os
-from peewee import PostgresqlDatabase, Model, CharField, BooleanField, ForeignKeyField
+from peewee import PostgresqlDatabase, Model, CharField, BooleanField, ForeignKeyField, TextField
 from flask_security import UserMixin, RoleMixin
 from playhouse.db_url import connect
 
@@ -27,6 +27,8 @@ class Food(BaseModel):
 
 class User(BaseModel, UserMixin):
 	username = CharField(unique=True)
+	name = CharField()
+	about_me = TextField()
 	email = CharField(unique=True)
 	password = CharField()
 	active = BooleanField(default=True)

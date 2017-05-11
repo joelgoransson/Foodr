@@ -4,6 +4,9 @@ from wtforms import StringField, IntegerField, PasswordField, validators
 from flask_security import Security, PeeweeUserDatastore, login_required
 from models import db, User, Role, UserRoles
 import os
+import cloudinary
+import cloudinary.uploader
+from werkzeug.utils import secure_filename
 
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
@@ -12,12 +15,14 @@ app.config["SECURITY_USER_IDENTITY_ATTRIBUTES"] = "email"
 app.config["SECURITY_PASSWORD_HASH"] = "pbkdf2_sha512"
 app.config["SECURITY_PASSWORD_SALT"] = app.config["SECRET_KEY"]
 
+cloudinary.config(
+	cloud_name = os.environ.get("cloudinary_name"),
+	api_key = os.environ.get('cloudinary_key'),
+	api_secret = os.environ.get('cloudinary_secret')
+)
+
 user_datastore = PeeweeUserDatastore(db, User, Role, UserRoles)
 security = Security(app, user_datastore)
-
-class LoginForm(FlaskForm):
-	email = StringField('Email:', [validators.required()])
-	password = PasswordField('Password:', [validators.required()])
 
 def user_is_logged_in():
 	return False
@@ -44,8 +49,40 @@ def picture_exists(picture_id):
 def home():
 	return 'feed'
 
-class PasswordForm(FlaskForm):
-	password = PasswordField('password', [validators.required()])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+def upload():
+	if request.method == 'POST':
+		# check if the post request has the file part
+		if 'file' not in request.files:
+			flash('No file part')
+			return redirect(request.url)
+		file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+		if file.filename == '':
+			flash('No selected file')
+			return redirect(request.url)
+		if file and allowed_file(file.filename):
+			filename = secure_filename(file.filename)
+			image = cloudinary.uploader.upload(file)
+			return "Uploaded image"
+	else:
+		return '''
+			<!doctype html>
+	    	<title>Upload new File</title>
+	    	<h1>Upload new File</h1>
+	    	<form method=post enctype=multipart/form-data>
+	     	<p><input type=file name=file>
+	        	 <input type=submit value=Upload>
+	    	</form>
+
+	   	'''
 
 @app.route('/about')
 def about():
@@ -58,19 +95,22 @@ def picture(picture_id):
 	else:
 		abort(404)
 
-@app.route('/user/<user_id>')
-def user(user_id):
+@app.route('/user/<user_profile>')
+def user(user_profile):
+	if user_profile.isdigit():
+		user = User.select().where(User.id == user_profile)
+	else:
+		user = User.select().where(User.username == user_profile)
+	
 	try:
-		user = User.select().where(User.id == user_id)[0]
-		return render_template('user.html', user=user)
-	except (ValueError, IndexError):
+		return render_template('user.html', user=user[0])
+	except IndexError:
 		abort(404)
 
 class AccountForm(FlaskForm):
 	name = StringField('name', [validators.InputRequired()])
 	email = StringField('email', [validators.InputRequired()])
 	age = IntegerField('age', [validators.InputRequired()])
-	
 
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_user():
