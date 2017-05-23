@@ -1,12 +1,17 @@
-from flask import Flask, request, redirect, url_for, render_template, abort, make_response, session
+from flask import Flask, request, redirect, url_for, render_template, abort, make_response, session, flash
+from flask_wtf.file import FileField
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, PasswordField, validators
+from wtforms import StringField, IntegerField, PasswordField,validators, ValidationError
+from wtforms.fields.html5 import EmailField
 from flask_security import Security, PeeweeUserDatastore, login_required
-from models import db, User, Role, UserRoles
+from models import db, User, Role, UserRoles, Image
+import auth
 import os
 import cloudinary
 import cloudinary.uploader
 from werkzeug.utils import secure_filename
+from flask_security.core import current_user
+import json
 
 app = Flask("Foodr")
 app.config["WTF_CSRF_ENABLED"] = False
@@ -47,90 +52,81 @@ def picture_exists(picture_id):
 @app.route("/")
 @login_required
 def home():
-	return 'feed'
+	return render_template('feed.html')
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+class UploadForm(FlaskForm):
+    file = FileField()
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
-	if request.method == 'POST':
-		# check if the post request has the file part
-		if 'file' not in request.files:
-			flash('No file part')
-			return redirect(request.url)
-		file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
+	form = UploadForm()
+	if form.validate_on_submit():
+		file = form.file.data
+		if file == None:
+			return 'error'
 		if file.filename == '':
 			flash('No selected file')
 			return redirect(request.url)
 		if file and allowed_file(file.filename):
 			filename = secure_filename(file.filename)
-			image = cloudinary.uploader.upload(file)
-			return "Uploaded image"
+			cloudinary_image = cloudinary.uploader.upload(file)
+			image = Image(url=cloudinary_image["url"], user=current_user.id)
+			image.save()
+			return redirect("image/" + str(image.id))
 	else:
-		return '''
-			<!doctype html>
-	    	<title>Upload new File</title>
-	    	<h1>Upload new File</h1>
-	    	<form method=post enctype=multipart/form-data>
-	     	<p><input type=file name=file>
-	        	 <input type=submit value=Upload>
-	    	</form>
-
-	   	'''
+		return render_template('upload.html', form=form)
 
 @app.route('/about')
 def about():
 	return render_template('about.html')
 
-@app.route('/picture/<picture_id>')
-def picture(picture_id):
-	if picture_exists(picture_id):
-		return render_template(picture.html)
-	else:
+@app.route('/image/<image_id>')
+def picture(image_id):
+	image = Image.select().where(Image.id == image_id)
+	try:
+		return render_template('image.html', image=image[0])
+	except (IndexError, ValueError):
 		abort(404)
 
-@app.route('/user/<user_profile>')
-def user(user_profile):
-	if user_profile.isdigit():
-		user = User.select().where(User.id == user_profile)
-	else:
-		user = User.select().where(User.username == user_profile)
-	
+@app.route('/user/<username>')
+def user(username):
+	user = User.select().where(User.username == username)
 	try:
 		return render_template('user.html', user=user[0])
-	except IndexError:
+	except (IndexError, ValueError):
 		abort(404)
 
-class AccountForm(FlaskForm):
-	name = StringField('name', [validators.InputRequired()])
-	email = StringField('email', [validators.InputRequired()])
-	age = IntegerField('age', [validators.InputRequired()])
+class RegisterForm(FlaskForm):
+	def validate_username(form, field):
+		if len(User.select().where(field.data.lower() == User.username)):
+			raise ValidationError('Username already exist!')
+	def validate_email(form, field):
+		if len(User.select().where(field.data == User.email)):
+			raise ValidationError('Email is already in use!')
 
-@app.route('/create_account', methods=['GET', 'POST'])
-def create_user():
-	return render_template('create_account.html', form=form)
+	username = StringField('username', [validators.InputRequired()], description="Username")
+	email = EmailField('email',[validators.InputRequired()], description="Email")
+	password = PasswordField('password', [validators.InputRequired(), validators.length(min=8,message='Password must be at least 8 characters long.'), validators.EqualTo('retype_password', message='Passwords must match.')], description="Password")
+	retype_password = PasswordField('retype_password', [validators.InputRequired()], description="Retype Password")
 
-
-class GuestForm(FlaskForm):
-	name = StringField('name', [validators.InputRequired()])
-	email = StringField('email', [validators.InputRequired()])
-	message = StringField('message', [validators.InputRequired()])
-
-@app.route('/guest_book', methods=['get', 'post'])
-def guest_book():
-	if request.method == 'POST':	
-		guest = Guest.create(name=request.form['name'], email=request.form['email'], message=request.form['message'])
-		guests = Guest.select()
-		return render_template('guests.html', guests=guests)
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+	form = RegisterForm()
+	if current_user.is_authenticated:
+		return redirect('/')
 	else:
-		form = GuestForm()
-		return render_template('guest_book.html', form=form)
+		if form.validate_on_submit():
+			try: 
+				auth.create_user(form.email.data, form.username.data.lower(), form.password.data)
+			except (peewee.IntegrityError):
+				abort(500)
+			return redirect(url_for("user", username=form.username.data.lower()))
+		else:
+			return render_template('register.html', form=form)
 
 if __name__ == "__main__":
 	app.run("0.0.0.0", debug=True)

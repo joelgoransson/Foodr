@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Foodr - Guest Book{% endblock %}
+{% block body_class %}login{% endblock %}
+{% block title %}Login - Foodr{% endblock %}
 
 {% block content %}
-<form action="{{ url_for_security('login') }}" method="POST" name="login_form">
-	<h1 class="title">All of your food in one place.</h1>
-	<div class="login_container">
+<img class="login_logo" src="static/icon.png">
+<div class="login_container">
+	<div class="login_profile">
+		<img src="static/profile_pic.png">
+	</div>
+	<form action="{{ url_for_security('login') }}" method="POST" name="login_form">
 		<div class="login_form"> 
-			<i class="fa fa-user" aria-hidden="true"></i>
 			{{ login_user_form.email(placeholder="Email") }}
 		</div>
 		<div class="login_form">
-			<i class="fa fa-lock" aria-hidden="true"></i>
 			{{ login_user_form.password(placeholder="Password") }}
 		</div>
-		<div class="login_form">
+		<div class="login_remember">
 			{{ login_user_form.remember }}
 			{{ login_user_form.remember.label }}
 		</div>
-		{{ login_user_form.submit }}
-	</div>
-</form>
+			{{ login_user_form.submit(class="login_button") }}
+	</form>
+	<a href="/register" class="login_text">Don't have an account?</a>
+	<a href="/forgot" class="login_text">Forgot your password?</a>
+</div>
 {% endblock %}

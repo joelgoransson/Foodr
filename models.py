@@ -10,14 +10,6 @@ else:
     DATABASE = 'webapp'
     db = PostgresqlDatabase(DATABASE)
 
-class Guest(Model):
-	name = CharField()
-	username = CharField()
-	email = CharField()
-	message = CharField()
-	class Meta:
-		database = db
-
 class BaseModel(Model):
 	class Meta:
 		database = db
@@ -26,13 +18,17 @@ class Food(BaseModel):
 	name = CharField(unique=True)
 
 class User(BaseModel, UserMixin):
+	picture = CharField(default="/static/profile_pic.png")
 	username = CharField(unique=True)
-	name = CharField()
-	about_me = TextField()
+	about_me = TextField(default="")
 	email = CharField(unique=True)
 	password = CharField()
 	active = BooleanField(default=True)
-	favorite_food = ForeignKeyField(Food)
+	favorite_food = ForeignKeyField(Food, null=True, default=None)
+
+class Image(BaseModel):
+	user = ForeignKeyField(User)
+	url = CharField()
 
 class Post(BaseModel):
 	user = ForeignKeyField(User)

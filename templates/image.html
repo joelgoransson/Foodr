@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Foodr - Picture {% endblock %}
+
+{% block content %}
+
+<img src="{{ image.url }}">
+{{ image.user.username}}
+{% endblock %}
