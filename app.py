@@ -14,7 +14,6 @@ from flask_security.core import current_user
 import json
 
 app = Flask("Foodr")
-app.config["WTF_CSRF_ENABLED"] = False
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "insecure_key")
 app.config["SECURITY_USER_IDENTITY_ATTRIBUTES"] = "email"
 app.config["SECURITY_PASSWORD_HASH"] = "pbkdf2_sha512"
