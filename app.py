@@ -3,9 +3,9 @@ from flask_wtf.file import FileField
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField,validators, ValidationError
 from wtforms.fields.html5 import EmailField
-from flask_security import Security, PeeweeUserDatastore, login_required
+from flask_security import Security, login_required
 from models import db, User, Role, UserRoles, Image
-import auth
+from auth import user_datastore, create_user
 import os
 import cloudinary
 import cloudinary.uploader
@@ -26,7 +26,6 @@ cloudinary.config(
 	api_secret = os.environ.get('cloudinary_secret')
 )
 
-user_datastore = PeeweeUserDatastore(db, User, Role, UserRoles)
 security = Security(app, user_datastore)
 
 def user_is_logged_in():
@@ -121,7 +120,7 @@ def register():
 	else:
 		if form.validate_on_submit():
 			try: 
-				auth.create_user(form.email.data, form.username.data.lower(), form.password.data)
+				create_user(form.email.data, form.username.data.lower(), form.password.data)
 			except (peewee.IntegrityError):
 				abort(500)
 			return redirect(url_for("user", username=form.username.data.lower()))
