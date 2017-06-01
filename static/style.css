@@ -25,23 +25,44 @@ body {
 }
 
 
+
+
 /* user */
+.profile_post{
+	width: 30%;
+}
+.profile_posts{
+	align-items: center;
+	flex-direction: row;
+	display: flex;
+}
+.profile_picture{
+	vertical-align: middle; 
+	display: inline-block;
+	width: 150px;
+}
+.profile_name{
+	margin: 0;
+	font-size: 40px;
+	display: inline-block;
+}
+
 .pagination{
 	margin: 0 auto;
 	text-align: center;
 }
 .pagination-item{
 	display: inline-block;
-	background: green;
-	border: 1px solid black ;
 	padding: 10px;
 }
 .pagination-link {
 	width: 100%;
+	text-decoration: none;
+	color: black;
 }
 
 .pagination-selected{
-	background: red;
+	text-decoration: black underline;
 }
 
 /* login and register */
