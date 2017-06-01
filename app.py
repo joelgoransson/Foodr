@@ -12,6 +12,8 @@ import cloudinary.uploader
 from werkzeug.utils import secure_filename
 from flask_security.core import current_user
 import json
+import peewee
+import math
 
 app = Flask("Foodr")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "insecure_key")
@@ -26,27 +28,6 @@ cloudinary.config(
 )
 
 security = Security(app, user_datastore)
-
-def user_is_logged_in():
-	return False
-
-def user_exists(user_id):
-	user = User.select().where(user_id == User.user_id)
-	if len(user) == 1:
-		print(user)
-		return user
-	return None
-
-def get_user_information(user_id):
-	return {"name": "Joel", "posts": 0, "diners": 0}
-
-def picture_exists(picture_id):
-	try:
-		picture_id = int(picture_id)
-		return True
-	except ValueError:
-		return False
-
 @app.route("/")
 @login_required
 def home():
@@ -90,13 +71,66 @@ def picture(image_id):
 	except (IndexError, ValueError):
 		abort(404)
 
+TOTAL_IMAGES_PER_PAGE = 1
 @app.route('/user/<username>')
 def user(username):
-	user = User.select().where(User.username == username)
+	user = User.select().where(User.username == username).get()
 	try:
-		return render_template('user.html', user=user[0])
+		all_images = Image.select().where(Image.user == user)
+		images = all_images.where(Image.user == user).order_by(Image.id).paginate(0, TOTAL_IMAGES_PER_PAGE)
+		last_page = math.ceil(len(all_images)/TOTAL_IMAGES_PER_PAGE)
+		
+		pages = last_page
+		if pages > 5:
+			pages = 5
+		pagination = []
+		for p in range(pages):
+			pagination.append(p + 1)
+		return render_template('user.html', user=user, images=images, current_page=1, pagination=pagination, last_page=last_page)
 	except (IndexError, ValueError):
 		abort(404)
+
+
+@app.route('/user/<username>/<page>')
+def user_pageinate(username, page):
+	user = User.select().where(User.username == username).get()
+	try:
+		page = int(page)
+		all_images = Image.select().where(Image.user == user)
+		images = all_images.order_by(Image.id).paginate(page, TOTAL_IMAGES_PER_PAGE)
+		
+		last_page = math.ceil(len(all_images)/TOTAL_IMAGES_PER_PAGE) 
+		first_page = 1
+
+		count = 0
+		start = page
+		end = page
+		done = [0, 0]
+		while count <= 3:
+			if start > first_page:
+				start -= 1
+				count += 1
+			else:
+				done[0] = True
+
+			if end < last_page:
+				end += 1
+				count += 1
+			else:
+				done[1] = True
+
+			if done[0] and done[1]:
+				break
+		pagination = []
+		for p in range(start, end + 1):
+			pagination.append(p)
+
+		if not images or not page or page == 1:
+			return redirect("user/"+username)
+		return render_template('user.html', user=user, images=images, current_page=page, pagination=pagination, last_page=last_page)
+	except (IndexError, ValueError, peewee.DataError):
+		abort(404)
+
 
 class RegisterForm(FlaskForm):
 	def validate_username(form, field):

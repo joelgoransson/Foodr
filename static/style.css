@@ -24,7 +24,25 @@ body {
 	list-style: none;
 }
 
-/* register */
+
+/* user */
+.pagination{
+	margin: 0 auto;
+	text-align: center;
+}
+.pagination-item{
+	display: inline-block;
+	background: green;
+	border: 1px solid black ;
+	padding: 10px;
+}
+.pagination-link {
+	width: 100%;
+}
+
+.pagination-selected{
+	background: red;
+}
 
 /* login and register */
 .register_button{

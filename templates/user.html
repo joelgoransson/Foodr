@@ -9,5 +9,23 @@
 <div class="container">
 	<img src="{{ user.picture }}">
 	{{ user.username }}
+	{% for image in images %}
+		<p>{{ image.url }}:{{ image.id }}></p>
+	{% endfor %}
+
+	<div class="pagination">
+		<div class="pagination-item">
+			<a class="pagination-link" href="/user/{{ user.username }}/1 ">First Page</a>
+		</div>
+		{% for page in pagination %}
+			<div class="{% if current_page == page %}pagination-selected{% endif %} pagination-item ">
+				<a class="pagination-link" href="/user/{{ user.username }}/{{ page }} ">{{ page }}</a>
+			</div>
+		{% endfor %}
+		<div class="pagination-item">
+			<a class="pagination-link" href="/user/{{ user.username }}/{{ last_page }}">Last Page</a>
+		</div>
+	</div>
+
 </div>
 {% endblock %}
